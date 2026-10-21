@@ -7,7 +7,7 @@ COMPOSER=$(command -v composer2 || command -v composer)
 
 php artisan down --retry=30 || true
 git pull --ff-only
-$COMPOSER install --no-dev --optimize-autoloader --no-interaction
+$COMPOSER install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 php artisan migrate --force
 php artisan optimize:clear
 php artisan optimize

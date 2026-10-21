@@ -14,11 +14,11 @@ git -C "$RAIZ" archive HEAD | tar -x -C "$DESTINO"
 
 cd "$DESTINO"
 cp .env.example .env
-composer install --no-dev --optimize-autoloader --no-interaction
+composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 php artisan filament:assets
 rm .env
 
-zip -qr "$RAIZ/portal.zip" . -x "tests/*" "node_modules/*"
+zip -qr "$RAIZ/portal.zip" . -x "tests/*" "node_modules/*" "*/.git/*"
 cd "$RAIZ" && rm -rf "$DESTINO"
 
 echo "Pacote gerado: $RAIZ/portal.zip"
