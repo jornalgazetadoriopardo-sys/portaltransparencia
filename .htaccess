@@ -1,0 +1,10 @@
+# Usado quando o projeto inteiro é enviado para dentro de public_html (hospedagem compartilhada).
+# Encaminha todas as requisições para a pasta public/, mantendo .env, vendor/ e storage/ inacessíveis.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
