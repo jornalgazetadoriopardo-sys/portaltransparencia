@@ -43,7 +43,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->navigationItems([
                 NavigationItem::make('Ver portal público')
-                    ->url('/', shouldOpenInNewTab: true)
+                    ->url(fn (): string => route('inicio'), shouldOpenInNewTab: true)
                     ->icon(Heroicon::OutlinedGlobeAlt)
                     ->sort(99),
             ])

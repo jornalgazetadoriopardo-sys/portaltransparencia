@@ -1,130 +1,176 @@
-# Implantação em cPanel (conta compartilhada com outros sites)
+# Implantação em cPanel: educandariosaojose.ong.br/transparencia
 
-Guia para quando a hospedagem usa **cPanel** e vários sites dividem a mesma conta, cada um numa pasta dentro do diretório pessoal. Exemplo usado aqui:
+Passo a passo para publicar o portal em **https://educandariosaojose.ong.br/transparencia**, numa conta cPanel compartilhada com outros sites.
 
-- conta: `/home/santacas`
-- pasta do portal: `/home/santacas/edsj`
+| Item | Valor |
+|---|---|
+| Conta cPanel | `/home/santacas` |
+| Pasta pública do domínio | `/home/santacas/edsj` |
+| Código do portal (fora da pasta pública) | `/home/santacas/portal-transparencia` |
+| Endereço do portal | `https://educandariosaojose.ong.br/transparencia` |
+| Painel administrativo | `https://educandariosaojose.ong.br/transparencia/admin` |
 
-Troque `santacas`, `edsj` e `SEUDOMINIO.org.br` pelos valores reais. Os outros sites da conta (`armtrs`, `autle` etc.) **não são afetados**: tudo acontece dentro de `edsj` e num banco de dados novo.
+**Como funciona:** o código fica **fora** da pasta pública, e dentro de `edsj` existe só um atalho (link simbólico) chamado `transparencia`, que aponta para a pasta `public/` do projeto. Assim, o `.env` (com as senhas) e o resto do código nunca ficam acessíveis pelo navegador, e a raiz do domínio continua livre para o site institucional.
 
-> **Antes de começar:** veja se `edsj` já tem um site no ar. Se tiver, baixe uma cópia (botão **Compress** do Gerenciador de Arquivos, depois **Download**) antes de mexer.
+Os outros sites da conta (`armtrs`, `autle` etc.) não são afetados.
 
-## 1. Preparar a conta (uma vez)
+## 1. Preparar a conta no cPanel (uma vez)
 
-1. **Versão do PHP**: em *Software → Select PHP Version* (seletor do CloudLinux), escolha **8.3** ou mais nova. Na mesma tela, marque as extensões `intl`, `pdo_mysql`, `mbstring`, `fileinfo`, `zip` e `gd`.
-   - Se a tela *MultiPHP Manager* aparecer, confira também se o domínio do portal está em 8.3. Lá a versão pode ser escolhida por domínio.
-   - Atenção: no seletor do CloudLinux, a versão costuma valer **para a conta inteira**. Antes de mudar, confirme que os outros sites funcionam em PHP 8.3. Se não funcionarem, peça ao suporte para definir o PHP 8.3 só para o domínio do portal.
-2. **Banco de dados**: em *Databases → MySQL Database Wizard*, crie o banco (por exemplo `santacas_portal`) e um usuário com **todos os privilégios** nele. Anote o nome do banco, o usuário e a senha. O host é `localhost`.
-3. **SSL**: em *Security → SSL/TLS Status*, confirme que o domínio tem certificado (AutoSSL).
-4. **E-mail (opcional)**: em *Email → Email Accounts*, crie por exemplo `portal@SEUDOMINIO.org.br` para os avisos de pedidos de informação.
+1. **PHP 8.3**: em *Software → Select PHP Version*, escolha **8.3** (ou mais nova) e marque as extensões `intl`, `pdo_mysql`, `mbstring`, `fileinfo`, `zip` e `gd`. Na aba *Options*, ajuste `upload_max_filesize` e `post_max_size` para **32M**.
+   > ⚠️ Nesse seletor, a versão costuma valer para **todos os sites da conta**. Antes de trocar, confirme que os outros sites funcionam em PHP 8.3. Se não funcionarem, peça ao suporte da hospedagem para ativar o PHP 8.3 só no domínio `educandariosaojose.ong.br`.
+2. **Banco de dados**: em *Databases → MySQL Database Wizard*, crie o banco (ex.: `santacas_transparencia`) e um usuário com **ALL PRIVILEGES**. Anote o nome do banco, o usuário e a senha.
+3. **SSL**: em *Security → SSL/TLS Status*, confirme que `educandariosaojose.ong.br` tem o cadeado (AutoSSL).
+4. **E-mail (opcional)**: em *Email → Email Accounts*, crie `transparencia@educandariosaojose.ong.br` para receber os avisos de pedidos de informação.
 
-## 2. Para onde o domínio aponta
+## 2. Instalar pelo Terminal
 
-O Laravel precisa que o domínio abra a pasta `public/` do projeto. No cPanel há duas formas:
+Abra *Advanced → Terminal* e rode os blocos abaixo, um de cada vez.
 
-**Forma 1 (recomendada): mudar a raiz do domínio.** Em *Domains → Domains*, clique em **Manage** no domínio do portal e mude o *Document Root* de `edsj` para **`edsj/public`**. Assim, `.env`, `vendor/` e `storage/` ficam fora do alcance do navegador.
-
-**Forma 2: se o cPanel não deixar mudar a raiz.** Deixe a raiz em `edsj`. O arquivo `.htaccess` que já vem na raiz do projeto encaminha tudo para `public/` e bloqueia o acesso direto a arquivos ocultos, como o `.env`.
-
-## 3. Enviar os arquivos
-
-### Caminho A: sem terminal (Gerenciador de Arquivos)
-
-1. No seu computador (com PHP 8.3 e Composer), na pasta do projeto, rode `bash scripts/gerar-pacote.sh`. Isso gera o `portal.zip` (cerca de 60 MB) já com as dependências.
-2. No **File Manager**, abra `edsj`, clique em **Upload**, envie o `portal.zip`, clique nele com o botão direito e escolha **Extract**. A extração deve ficar **direto dentro de `edsj`**: você precisa ver `edsj/app`, `edsj/public`, `edsj/artisan` etc. Depois apague o `portal.zip`.
-   - Ligue *Settings → Show Hidden Files* no Gerenciador para ver o `.htaccess` e o `.env`.
-3. Copie `edsj/.env.example` para `edsj/.env` e edite (seção 4). Em `APP_KEY`, cole uma chave gerada no seu computador com `php artisan key:generate --show`.
-
-### Caminho B: com terminal (*Advanced → Terminal* ou SSH)
+### 2.1 Conferir PHP e Composer
 
 ```bash
-cd ~/edsj
-git clone https://github.com/jornalgazetadoriopardo-sys/portaltransparencia.git .   # a pasta precisa estar vazia
+php -v          # precisa mostrar 8.3.x ou mais nova
+composer -V     # se der "command not found", rode o bloco abaixo
+```
+
+Se não houver Composer, instale uma cópia só para a sua conta:
+
+```bash
+mkdir -p ~/bin && cd ~/bin
+php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+php composer-setup.php --filename=composer && rm composer-setup.php
+export PATH="$HOME/bin:$PATH" && echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc
+composer -V
+```
+
+### 2.2 Baixar o código
+
+```bash
+cd ~
+git clone https://github.com/jornalgazetadoriopardo-sys/portaltransparencia.git portal-transparencia
+cd portal-transparencia
+```
+
+Se o repositório for **privado**, o Git pede usuário e senha. Na senha, use um *token* do GitHub, não a senha da conta: em *GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens*, gere um token com acesso de leitura (*Contents: Read-only*) só a este repositório.
+
+> Enquanto o código não for incorporado ao branch principal (`main`), use o branch de desenvolvimento: `git checkout ccr-5c2410e8-tbruud`.
+
+### 2.3 Instalar as dependências e configurar
+
+```bash
 composer install --no-dev --prefer-dist --optimize-autoloader
 cp .env.example .env
 php artisan key:generate
-nano .env       # seção 4
+nano .env
 ```
 
-Se o repositório for privado, o `git clone` vai pedir usuário e um *token* do GitHub. Outra opção é usar *Files → Git Version Control* do cPanel. Se o comando `composer` não existir no servidor, use o Caminho A.
-
-## 4. Arquivo `.env` em produção
+No `nano`, ajuste as linhas abaixo e salve com `Ctrl+O`, `Enter`, `Ctrl+X`:
 
 ```ini
 APP_NAME="Portal da Transparência"
 APP_ENV=production
 APP_DEBUG=false
-APP_KEY=base64:...colar-a-chave-gerada...
-APP_URL=https://SEUDOMINIO.org.br
+APP_URL=https://educandariosaojose.ong.br/transparencia
 
 DB_CONNECTION=mysql
 DB_HOST=localhost
 DB_PORT=3306
-DB_DATABASE=santacas_portal
-DB_USERNAME=santacas_portal
+DB_DATABASE=santacas_transparencia
+DB_USERNAME=santacas_transparencia
 DB_PASSWORD=senha-do-banco
 
+SESSION_PATH=/transparencia
 SESSION_SECURE_COOKIE=true
 
-# Opcional: avisos de novos pedidos de informação
+# Opcional: aviso por e-mail de novos pedidos de informação
 MAIL_MAILER=smtp
-MAIL_HOST=mail.SEUDOMINIO.org.br
+MAIL_HOST=mail.educandariosaojose.ong.br
 MAIL_PORT=465
 MAIL_SCHEME=smtps
-MAIL_USERNAME=portal@SEUDOMINIO.org.br
+MAIL_USERNAME=transparencia@educandariosaojose.ong.br
 MAIL_PASSWORD=senha-do-email
-MAIL_FROM_ADDRESS=portal@SEUDOMINIO.org.br
-PORTAL_EMAIL_PEDIDOS=secretaria@SEUDOMINIO.org.br
+MAIL_FROM_ADDRESS=transparencia@educandariosaojose.ong.br
+PORTAL_EMAIL_PEDIDOS=secretaria@educandariosaojose.ong.br
 ```
 
-## 5. Instalar (criar tabelas, atalho dos arquivos, primeiro usuário)
+As linhas `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME` e `DB_PASSWORD` vêm comentadas no arquivo, com `#` na frente. Apague o `#` ao preencher.
 
-**Com terminal:**
+### 2.4 Criar as tabelas, o primeiro usuário e otimizar
 
 ```bash
-cd ~/edsj
-php -v                      # precisa mostrar 8.3 ou mais nova
 php artisan migrate --force
-php artisan db:seed --force
+php artisan db:seed --force          # cria o cadastro da entidade e as perguntas frequentes
 php artisan storage:link
-php artisan make:filament-user
+php artisan make:filament-user       # pede nome, e-mail e senha do primeiro administrador
 php artisan optimize
+chmod -R 755 storage bootstrap/cache
 ```
 
-**Sem terminal:** use *Advanced → Cron Jobs*. Crie uma tarefa com *Once Per Minute* e o comando abaixo, espere 2 minutos, confira o resultado e **apague a tarefa**:
+### 2.5 Publicar em /transparencia
 
-```
-cd /home/santacas/edsj && (php -v && php artisan migrate --force && php artisan db:seed --force && php artisan storage:link && php artisan optimize) > storage/logs/instalacao.txt 2>&1
-```
-
-Depois, crie outra tarefa temporária para o primeiro usuário do painel (troque os dados) e apague-a assim que executar:
-
-```
-cd /home/santacas/edsj && php artisan make:filament-user --name="Seu Nome" --email="voce@SEUDOMINIO.org.br" --password="UmaSenhaForte123"
+```bash
+ln -s /home/santacas/portal-transparencia/public /home/santacas/edsj/transparencia
+ls -l /home/santacas/edsj        # deve mostrar: transparencia -> /home/santacas/portal-transparencia/public
 ```
 
-> Se o arquivo `storage/logs/instalacao.txt` mostrar erro de versão do PHP, troque `php` pelo caminho completo da versão 8.3. No CloudLinux costuma ser `/opt/alt/php83/usr/bin/php`, e o suporte da hospedagem confirma o caminho exato.
+Pronto. Abra:
+- https://educandariosaojose.ong.br/transparencia (portal)
+- https://educandariosaojose.ong.br/transparencia/admin (painel)
 
-Pronto: abra `https://SEUDOMINIO.org.br` (portal) e `https://SEUDOMINIO.org.br/admin` (painel).
+### 2.6 (Opcional) Raiz do domínio
 
-## 6. Atualizar depois
+A pasta `edsj` está vazia, então quem acessar `educandariosaojose.ong.br` sem o `/transparencia` verá uma página em branco ou um erro. Enquanto não houver site institucional, dá para mandar esses visitantes para o portal:
 
-- **Com terminal:** `cd ~/edsj && bash scripts/atualizar-servidor.sh`
-- **Sem terminal:** gere um novo `portal.zip`, envie e extraia por cima em `edsj`. **Não apague** o `.env` nem a pasta `storage/app/public`, onde ficam os PDFs enviados pelo painel. Depois rode de novo a tarefa Cron da seção 5 (só a primeira).
+```bash
+cat > /home/santacas/edsj/.htaccess <<'EOF'
+RewriteEngine On
+RewriteRule ^$ /transparencia/ [R=302,L]
+EOF
+```
 
-## 7. Cópias de segurança
+Quando o site institucional for publicado em `edsj`, apague esse `.htaccess` (ou ajuste-o) e coloque um link para "Transparência" no menu do site.
 
-- Banco: *Databases → phpMyAdmin → Export*.
-- Arquivos enviados: pasta `edsj/storage/app/public`.
-- O *Backup* do cPanel também inclui tudo, mas a cópia completa contém todos os sites da conta.
+## 3. Atualizar o portal depois
+
+Quando houver mudanças no código:
+
+```bash
+cd ~/portal-transparencia
+bash scripts/atualizar-servidor.sh
+```
+
+O script coloca o portal em manutenção por alguns segundos, baixa o código novo, atualiza as dependências e o banco e volta ao ar.
+
+## 4. Primeiros passos no painel
+
+1. *Institucional → Dados da entidade*: razão social, CNPJ, endereço, horário de atendimento e logotipo.
+2. *Dirigentes e conselheiros*: diretoria e Conselho Fiscal, com os mandatos.
+3. *Documentos*: estatuto, ata de eleição, regulamento de compras, certidões, balanços e pareceres.
+4. *Parcerias e convênios*: cada termo ou convênio, com o PDF do instrumento e o plano de trabalho.
+5. *Receitas* e *Despesas*: lançamentos (no mínimo os pagos com recursos públicos).
+6. Confira o resultado em **Ver portal público**.
+
+## 5. Cópias de segurança
+
+```bash
+# Banco de dados (gera um arquivo .sql.gz na pasta pessoal)
+mysqldump -u santacas_transparencia -p santacas_transparencia | gzip > ~/backup-transparencia-$(date +%F).sql.gz
+
+# PDFs e imagens enviados pelo painel
+tar czf ~/backup-arquivos-$(date +%F).tar.gz -C ~/portal-transparencia/storage/app public
+```
+
+Baixe esses arquivos pelo Gerenciador de Arquivos e guarde fora do servidor. O ideal é fazer isso uma vez por mês.
 
 ## Problemas comuns
 
 | Sintoma | Solução |
 |---|---|
-| Erro 500 | Confira o `.env` (banco e `APP_KEY`) e as permissões de `storage/` e `bootstrap/cache/` (755). O erro detalhado fica em `edsj/storage/logs/laravel.log`. |
-| Aparece a lista de pastas ou "Index of" | O domínio não está apontando para `public/`: refaça a seção 2. Se usou a Forma 2, confira se o `.htaccess` está na raiz de `edsj`. |
-| PDFs enviados dão 404 | Falta o atalho: rode `php artisan storage:link`. |
-| Painel sem estilo | Rode `php artisan filament:assets` e `php artisan optimize`. |
-| Upload de arquivo grande falha | Em *Select PHP Version → Options*, aumente `upload_max_filesize` e `post_max_size` (por exemplo, 32M). |
-| Outro site da conta parou após trocar o PHP | O seletor mudou a versão da conta toda. Volte a versão anterior e peça ao suporte PHP 8.3 só para o domínio do portal. |
+| Erro 500 | Veja o erro em `~/portal-transparencia/storage/logs/laravel.log`. As causas mais comuns são `.env` errado (dados do banco) ou falta de permissão em `storage/`. Para esta última, rode `chmod -R 755 storage bootstrap/cache`. |
+| 403 / "Forbidden" em /transparencia | O servidor não está seguindo o link simbólico. Peça ao suporte para habilitar `SymLinksIfOwnerMatch` para a conta, ou use a alternativa abaixo. |
+| PDFs enviados dão 404 | Rode `php artisan storage:link` dentro de `~/portal-transparencia`. |
+| Links levam para educandariosaojose.ong.br sem o /transparencia | Confira `APP_URL` no `.env` e rode `php artisan optimize`. |
+| Login do painel volta para a tela de login | Confira `SESSION_PATH=/transparencia` e `SESSION_SECURE_COOKIE=true` (o site deve estar em https) e rode `php artisan optimize`. |
+| Upload de arquivo grande falha | Aumente `upload_max_filesize` e `post_max_size` em *Select PHP Version → Options*. |
+
+**Alternativa sem link simbólico** (se o suporte não permitir): coloque o projeto inteiro em `/home/santacas/edsj/transparencia` em vez de `~/portal-transparencia`. O arquivo `.htaccess` da raiz do projeto encaminha as requisições para `public/` e bloqueia arquivos ocultos como o `.env`. A primeira opção (link simbólico) continua sendo a mais segura.

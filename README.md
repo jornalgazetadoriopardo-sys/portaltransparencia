@@ -54,7 +54,7 @@ Testes: `php artisan test`
 
 ## Colocar no ar
 
-- **Hospedagem com cPanel**, com o portal numa pasta ao lado de outros sites (ex.: `/home/conta/edsj`): **[docs/IMPLANTACAO-CPANEL.md](docs/IMPLANTACAO-CPANEL.md)**
+- **Educandário São José — cPanel, em `educandariosaojose.ong.br/transparencia`**: **[docs/IMPLANTACAO-CPANEL.md](docs/IMPLANTACAO-CPANEL.md)**
 - **Hostinger com hPanel**: [docs/IMPLANTACAO-HOSTINGER.md](docs/IMPLANTACAO-HOSTINGER.md)
 
 ## Personalizar
