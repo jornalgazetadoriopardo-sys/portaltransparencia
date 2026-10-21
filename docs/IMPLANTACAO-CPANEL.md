@@ -19,8 +19,9 @@ Os outros sites da conta (`armtrs`, `autle` etc.) não são afetados.
 1. **PHP 8.3**: em *Software → Select PHP Version*, escolha **8.3** (ou mais nova) e marque as extensões `intl`, `pdo_mysql`, `mbstring`, `fileinfo`, `zip` e `gd`. Na aba *Options*, ajuste `upload_max_filesize` e `post_max_size` para **32M**.
    > ⚠️ Nesse seletor, a versão costuma valer para **todos os sites da conta**. Antes de trocar, confirme que os outros sites funcionam em PHP 8.3. Se não funcionarem, peça ao suporte da hospedagem para ativar o PHP 8.3 só no domínio `educandariosaojose.ong.br`.
 2. **Banco de dados**: em *Databases → MySQL Database Wizard*, crie o banco (ex.: `santacas_transparencia`) e um usuário com **ALL PRIVILEGES**. Anote o nome do banco, o usuário e a senha.
-3. **SSL**: em *Security → SSL/TLS Status*, confirme que `educandariosaojose.ong.br` tem o cadeado (AutoSSL).
-4. **E-mail (opcional)**: em *Email → Email Accounts*, crie `transparencia@educandariosaojose.ong.br` para receber os avisos de pedidos de informação.
+3. **Raiz do domínio**: em *Domains → Domains*, confirme que o *Document Root* de `educandariosaojose.ong.br` é **`edsj`**, e não `edsj/public`. O portal entra como subpasta (`edsj/transparencia`), então a raiz do domínio não muda.
+4. **SSL**: em *Security → SSL/TLS Status*, confirme que `educandariosaojose.ong.br` tem o cadeado (AutoSSL).
+5. **E-mail (opcional)**: em *Email → Email Accounts*, crie `transparencia@educandariosaojose.ong.br` para receber os avisos de pedidos de informação.
 
 ## 2. Instalar pelo Terminal
 
@@ -180,6 +181,7 @@ Baixe esses arquivos pelo Gerenciador de Arquivos e guarde fora do servidor. O i
 | Sintoma | Solução |
 |---|---|
 | Erro 500 | Veja o erro em `~/portal-transparencia/storage/logs/laravel.log`. As causas mais comuns são `.env` errado (dados do banco) ou falta de permissão em `storage/`. Para esta última, rode `chmod -R 755 storage bootstrap/cache`. |
+| 404 com página do servidor (não do portal) em /transparencia | O *Document Root* do domínio está errado. Em *Domains → Domains*, ele deve ser `edsj`. Confira também com `ls -la /home/santacas/edsj/` se o atalho `transparencia` existe. |
 | 403 / "Forbidden" em /transparencia | O servidor não está seguindo o link simbólico. Peça ao suporte para habilitar `SymLinksIfOwnerMatch` para a conta, ou use a alternativa abaixo. |
 | PDFs enviados dão 404 | Falta o atalho dos arquivos: `ln -s /home/santacas/portal-transparencia/storage/app/public /home/santacas/portal-transparencia/public/storage` |
 | `Call to undefined function ... exec()` no `storage:link` | A hospedagem bloqueia essa função do PHP. Crie o atalho com o comando `ln -s` da linha acima. |
