@@ -1,0 +1,165 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@theme {
+    /* Fontes do sistema: carregam instantaneamente e não dependem de serviços externos. */
+    --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+    /* Paleta do portal: troque estas cores pelas da identidade visual da associação. */
+    --color-primaria: #0f5e66;
+    --color-primaria-escura: #0a3f45;
+    --color-destaque: #f2c14e;
+    --color-fundo: #f5f7f8;
+    --color-texto: #1d2528;
+    --color-texto-suave: #4f5b60;
+    --color-borda: #d9e0e3;
+}
+
+@layer components {
+    .cartao {
+        @apply rounded-lg border border-borda bg-white p-5;
+    }
+
+    .link {
+        @apply text-primaria underline decoration-1 underline-offset-2 hover:decoration-2;
+    }
+
+    .botao {
+        @apply inline-flex items-center justify-center rounded-md bg-primaria px-4 py-2 font-medium text-white hover:bg-primaria-escura;
+    }
+
+    .botao-secundario {
+        @apply inline-flex items-center justify-center rounded-md border border-primaria bg-white px-3 py-1.5 font-medium text-primaria hover:bg-primaria/5;
+    }
+
+    .rotulo {
+        @apply mb-1 block text-sm font-medium;
+    }
+
+    .campo {
+        @apply block w-full rounded-md border border-borda bg-white px-3 py-2 text-texto;
+    }
+
+    .campo[aria-invalid='true'] {
+        @apply border-red-700;
+    }
+
+    .selo {
+        @apply inline-flex shrink-0 items-center rounded bg-primaria/10 px-2 py-1 text-xs font-semibold text-primaria-escura;
+    }
+
+    .selo-status {
+        @apply inline-flex shrink-0 items-center rounded-full border border-primaria/30 bg-primaria/10 px-3 py-0.5 text-xs font-semibold text-primaria-escura;
+    }
+
+    .tabela {
+        @apply w-full border-collapse overflow-hidden rounded-lg border border-borda bg-white text-sm;
+    }
+
+    .tabela th {
+        @apply bg-primaria/5 px-3 py-2.5 text-left font-semibold text-primaria-escura;
+    }
+
+    .tabela td {
+        @apply border-t border-borda px-3 py-2.5 align-top;
+    }
+}
+
+/* Foco sempre visível para quem navega pelo teclado. */
+:focus-visible {
+    outline: 3px solid var(--color-destaque);
+    outline-offset: 2px;
+}
+
+/* No celular, cada linha das tabelas vira um cartão com rótulos. */
+@media (max-width: 639px) {
+    .tabela thead {
+        @apply sr-only;
+    }
+
+    .tabela,
+    .tabela tbody,
+    .tabela tr,
+    .tabela td {
+        display: block;
+        width: 100%;
+    }
+
+    .tabela tr {
+        @apply border-t border-borda py-2;
+    }
+
+    .tabela tr:first-child {
+        border-top: 0;
+    }
+
+    .tabela td {
+        @apply border-0 py-0.5 text-left!;
+    }
+
+    .tabela td[data-label]::before {
+        content: attr(data-label);
+        @apply block text-xs font-medium text-texto-suave;
+    }
+}
+
+/* Modo de alto contraste (botão na barra de acessibilidade). */
+html.alto-contraste {
+    --color-primaria: #ffff00;
+    --color-primaria-escura: #000000;
+    --color-destaque: #ffff00;
+    --color-fundo: #000000;
+    --color-texto: #ffffff;
+    --color-texto-suave: #ffffff;
+    --color-borda: #ffffff;
+}
+
+html.alto-contraste body,
+html.alto-contraste header,
+html.alto-contraste footer,
+html.alto-contraste .cartao,
+html.alto-contraste .tabela,
+html.alto-contraste .tabela th,
+html.alto-contraste .campo,
+html.alto-contraste details,
+html.alto-contraste ul.bg-white,
+html.alto-contraste .botao-secundario {
+    background: #000 !important;
+    color: #fff !important;
+}
+
+html.alto-contraste a,
+html.alto-contraste .link,
+html.alto-contraste .botao-secundario {
+    color: #ffff00 !important;
+}
+
+html.alto-contraste .botao {
+    background: #ffff00 !important;
+    color: #000 !important;
+}
+
+html.alto-contraste .selo,
+html.alto-contraste .selo-status {
+    background: #000 !important;
+    color: #fff !important;
+    border: 1px solid #fff;
+}
+
+@media print {
+    header,
+    footer,
+    form,
+    nav,
+    [vw],
+    .bg-primaria-escura,
+    [aria-label='Baixar os dados desta consulta'] {
+        display: none !important;
+    }
+
+    body {
+        background: #fff;
+    }
+}
