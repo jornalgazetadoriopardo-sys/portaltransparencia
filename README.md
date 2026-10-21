@@ -52,9 +52,10 @@ Se alterar o visual (arquivos em `resources/css`, `resources/js` ou nas views), 
 
 Testes: `php artisan test`
 
-## Colocar no ar na Hostinger
+## Colocar no ar
 
-Siga o passo a passo em **[docs/IMPLANTACAO-HOSTINGER.md](docs/IMPLANTACAO-HOSTINGER.md)**.
+- **Hospedagem com cPanel**, com o portal numa pasta ao lado de outros sites (ex.: `/home/conta/edsj`): **[docs/IMPLANTACAO-CPANEL.md](docs/IMPLANTACAO-CPANEL.md)**
+- **Hostinger com hPanel**: [docs/IMPLANTACAO-HOSTINGER.md](docs/IMPLANTACAO-HOSTINGER.md)
 
 ## Personalizar
 
