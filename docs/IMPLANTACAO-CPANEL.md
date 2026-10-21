@@ -171,6 +171,7 @@ Baixe esses arquivos pelo Gerenciador de Arquivos e guarde fora do servidor. O i
 | PDFs enviados dão 404 | Rode `php artisan storage:link` dentro de `~/portal-transparencia`. |
 | Links levam para educandariosaojose.ong.br sem o /transparencia | Confira `APP_URL` no `.env` e rode `php artisan optimize`. |
 | Login do painel volta para a tela de login | Confira `SESSION_PATH=/transparencia` e `SESSION_SECURE_COOKIE=true` (o site deve estar em https) e rode `php artisan optimize`. |
+| Aviso "pdo_mysql skipped as conflicting" no Select PHP Version | É normal: `pdo_mysql` e `nd_pdo_mysql` não podem ficar ligadas juntas. Basta uma delas. Confira com `php -m \| grep -i pdo` (deve listar `pdo_mysql`). Se não listar, marque `nd_pdo_mysql` e `mysqlnd`. |
 | Upload de arquivo grande falha | Aumente `upload_max_filesize` e `post_max_size` em *Select PHP Version → Options*. |
 
 **Alternativa sem link simbólico** (se o suporte não permitir): coloque o projeto inteiro em `/home/santacas/edsj/transparencia` em vez de `~/portal-transparencia`. O arquivo `.htaccess` da raiz do projeto encaminha as requisições para `public/` e bloqueia arquivos ocultos como o `.env`. A primeira opção (link simbólico) continua sendo a mais segura.
