@@ -53,8 +53,6 @@ cd portal-transparencia
 
 Se o repositório for **privado**, o Git pede usuário e senha. Na senha, use um *token* do GitHub, não a senha da conta: em *GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens*, gere um token com acesso de leitura (*Contents: Read-only*) só a este repositório.
 
-> Enquanto o código não for incorporado ao branch principal (`main`), use o branch de desenvolvimento: `git checkout ccr-5c2410e8-tbruud`.
-
 ### 2.3 Instalar as dependências e configurar
 
 ```bash
@@ -100,8 +98,23 @@ As linhas `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME` e `DB_PASSWORD` vê
 ```bash
 php artisan migrate --force
 php artisan db:seed --force          # cria o cadastro da entidade e as perguntas frequentes
-php artisan storage:link
-php artisan make:filament-user       # pede nome, e-mail e senha do primeiro administrador
+```
+
+Atalho para os arquivos enviados pelo painel (PDFs e imagens). O `php artisan storage:link` costuma falhar em hospedagem compartilhada, que bloqueia as funções `symlink`/`exec` do PHP, então crie o atalho direto:
+
+```bash
+ln -s /home/santacas/portal-transparencia/storage/app/public /home/santacas/portal-transparencia/public/storage
+```
+
+Primeiro administrador do painel. Rode este comando **sozinho**, sem colar outros junto: ele pergunta nome, e-mail e senha, e a senha não aparece enquanto você digita.
+
+```bash
+php artisan make:filament-user
+```
+
+Por fim:
+
+```bash
 php artisan optimize
 chmod -R 755 storage bootstrap/cache
 ```
@@ -168,7 +181,8 @@ Baixe esses arquivos pelo Gerenciador de Arquivos e guarde fora do servidor. O i
 |---|---|
 | Erro 500 | Veja o erro em `~/portal-transparencia/storage/logs/laravel.log`. As causas mais comuns são `.env` errado (dados do banco) ou falta de permissão em `storage/`. Para esta última, rode `chmod -R 755 storage bootstrap/cache`. |
 | 403 / "Forbidden" em /transparencia | O servidor não está seguindo o link simbólico. Peça ao suporte para habilitar `SymLinksIfOwnerMatch` para a conta, ou use a alternativa abaixo. |
-| PDFs enviados dão 404 | Rode `php artisan storage:link` dentro de `~/portal-transparencia`. |
+| PDFs enviados dão 404 | Falta o atalho dos arquivos: `ln -s /home/santacas/portal-transparencia/storage/app/public /home/santacas/portal-transparencia/public/storage` |
+| `Call to undefined function ... exec()` no `storage:link` | A hospedagem bloqueia essa função do PHP. Crie o atalho com o comando `ln -s` da linha acima. |
 | Links levam para educandariosaojose.ong.br sem o /transparencia | Confira `APP_URL` no `.env` e rode `php artisan optimize`. |
 | Login do painel volta para a tela de login | Confira `SESSION_PATH=/transparencia` e `SESSION_SECURE_COOKIE=true` (o site deve estar em https) e rode `php artisan optimize`. |
 | Aviso "pdo_mysql skipped as conflicting" no Select PHP Version | É normal: `pdo_mysql` e `nd_pdo_mysql` não podem ficar ligadas juntas. Basta uma delas. Confira com `php -m \| grep -i pdo` (deve listar `pdo_mysql`). Se não listar, marque `nd_pdo_mysql` e `mysqlnd`. |
