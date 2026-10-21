@@ -113,9 +113,10 @@ Primeiro administrador do painel. Rode este comando **sozinho**, sem colar outro
 php artisan make:filament-user
 ```
 
-Por fim:
+Por fim (o `filament:assets` copia os arquivos de estilo e script do painel administrativo):
 
 ```bash
+php artisan filament:assets
 php artisan optimize
 chmod -R 755 storage bootstrap/cache
 ```
@@ -183,6 +184,7 @@ Baixe esses arquivos pelo Gerenciador de Arquivos e guarde fora do servidor. O i
 | Erro 500 | Veja o erro em `~/portal-transparencia/storage/logs/laravel.log`. As causas mais comuns são `.env` errado (dados do banco) ou falta de permissão em `storage/`. Para esta última, rode `chmod -R 755 storage bootstrap/cache`. |
 | 404 com página do servidor (não do portal) em /transparencia | O *Document Root* do domínio está errado. Em *Domains → Domains*, ele deve ser `edsj`. Confira também com `ls -la /home/santacas/edsj/` se o atalho `transparencia` existe. |
 | 403 / "Forbidden" em /transparencia | O servidor não está seguindo o link simbólico. Peça ao suporte para habilitar `SymLinksIfOwnerMatch` para a conta, ou use a alternativa abaixo. |
+| Painel `/admin` sem estilo (texto solto, ícones gigantes) | Faltam os arquivos do Filament: rode `php artisan filament:assets` e `php artisan optimize` e recarregue com Ctrl+F5. |
 | PDFs enviados dão 404 | Falta o atalho dos arquivos: `ln -s /home/santacas/portal-transparencia/storage/app/public /home/santacas/portal-transparencia/public/storage` |
 | `Call to undefined function ... exec()` no `storage:link` | A hospedagem bloqueia essa função do PHP. Crie o atalho com o comando `ln -s` da linha acima. |
 | Links levam para educandariosaojose.ong.br sem o /transparencia | Confira `APP_URL` no `.env` e rode `php artisan optimize`. |
