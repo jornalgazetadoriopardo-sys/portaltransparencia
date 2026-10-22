@@ -19,8 +19,9 @@ Os outros sites da conta (`armtrs`, `autle` etc.) não são afetados.
 1. **PHP 8.3**: em *Software → Select PHP Version*, escolha **8.3** (ou mais nova) e marque as extensões `intl`, `pdo_mysql`, `mbstring`, `fileinfo`, `zip` e `gd`. Na aba *Options*, ajuste `upload_max_filesize` e `post_max_size` para **32M**.
    > ⚠️ Nesse seletor, a versão costuma valer para **todos os sites da conta**. Antes de trocar, confirme que os outros sites funcionam em PHP 8.3. Se não funcionarem, peça ao suporte da hospedagem para ativar o PHP 8.3 só no domínio `educandariosaojose.ong.br`.
 2. **Banco de dados**: em *Databases → MySQL Database Wizard*, crie o banco (ex.: `santacas_transparencia`) e um usuário com **ALL PRIVILEGES**. Anote o nome do banco, o usuário e a senha.
-3. **SSL**: em *Security → SSL/TLS Status*, confirme que `educandariosaojose.ong.br` tem o cadeado (AutoSSL).
-4. **E-mail (opcional)**: em *Email → Email Accounts*, crie `transparencia@educandariosaojose.ong.br` para receber os avisos de pedidos de informação.
+3. **Raiz do domínio**: em *Domains → Domains*, confirme que o *Document Root* de `educandariosaojose.ong.br` é **`edsj`**, e não `edsj/public`. O portal entra como subpasta (`edsj/transparencia`), então a raiz do domínio não muda.
+4. **SSL**: em *Security → SSL/TLS Status*, confirme que `educandariosaojose.ong.br` tem o cadeado (AutoSSL).
+5. **E-mail (opcional)**: em *Email → Email Accounts*, crie `transparencia@educandariosaojose.ong.br` para receber os avisos de pedidos de informação.
 
 ## 2. Instalar pelo Terminal
 
@@ -52,8 +53,6 @@ cd portal-transparencia
 ```
 
 Se o repositório for **privado**, o Git pede usuário e senha. Na senha, use um *token* do GitHub, não a senha da conta: em *GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens*, gere um token com acesso de leitura (*Contents: Read-only*) só a este repositório.
-
-> Enquanto o código não for incorporado ao branch principal (`main`), use o branch de desenvolvimento: `git checkout ccr-5c2410e8-tbruud`.
 
 ### 2.3 Instalar as dependências e configurar
 
@@ -100,8 +99,24 @@ As linhas `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME` e `DB_PASSWORD` vê
 ```bash
 php artisan migrate --force
 php artisan db:seed --force          # cria o cadastro da entidade e as perguntas frequentes
-php artisan storage:link
-php artisan make:filament-user       # pede nome, e-mail e senha do primeiro administrador
+```
+
+Atalho para os arquivos enviados pelo painel (PDFs e imagens). O `php artisan storage:link` costuma falhar em hospedagem compartilhada, que bloqueia as funções `symlink`/`exec` do PHP, então crie o atalho direto:
+
+```bash
+ln -s /home/santacas/portal-transparencia/storage/app/public /home/santacas/portal-transparencia/public/storage
+```
+
+Primeiro administrador do painel. Rode este comando **sozinho**, sem colar outros junto: ele pergunta nome, e-mail e senha, e a senha não aparece enquanto você digita.
+
+```bash
+php artisan make:filament-user
+```
+
+Por fim (o `filament:assets` copia os arquivos de estilo e script do painel administrativo):
+
+```bash
+php artisan filament:assets
 php artisan optimize
 chmod -R 755 storage bootstrap/cache
 ```
@@ -123,6 +138,7 @@ A pasta `edsj` está vazia, então quem acessar `educandariosaojose.ong.br` sem 
 
 ```bash
 cat > /home/santacas/edsj/.htaccess <<'EOF'
+Options -Indexes
 RewriteEngine On
 RewriteRule ^$ /transparencia/ [R=302,L]
 EOF
@@ -141,7 +157,23 @@ bash scripts/atualizar-servidor.sh
 
 O script coloca o portal em manutenção por alguns segundos, baixa o código novo, atualiza as dependências e o banco e volta ao ar.
 
-## 4. Primeiros passos no painel
+## 4. Página "Em construção"
+
+Enquanto os dados são cadastrados, o portal pode mostrar ao público só um aviso de "Em construção". O painel `/admin` continua funcionando normalmente, e quem estiver logado no painel vê o portal completo, para conferir antes de abrir.
+
+Para **ligar**, coloque esta linha no `.env` e recarregue a configuração:
+
+```bash
+cd ~/portal-transparencia
+nano .env                 # PORTAL_EM_CONSTRUCAO=true
+php artisan optimize
+```
+
+Para **desligar** (abrir o portal ao público), mude para `PORTAL_EM_CONSTRUCAO=false` e rode `php artisan optimize` de novo.
+
+A página mostra o nome, o e-mail, o telefone e o horário cadastrados em *Dados da entidade*.
+
+## 5. Primeiros passos no painel
 
 1. *Institucional → Dados da entidade*: razão social, CNPJ, endereço, horário de atendimento e logotipo.
 2. *Dirigentes e conselheiros*: diretoria e Conselho Fiscal, com os mandatos.
@@ -150,7 +182,7 @@ O script coloca o portal em manutenção por alguns segundos, baixa o código no
 5. *Receitas* e *Despesas*: lançamentos (no mínimo os pagos com recursos públicos).
 6. Confira o resultado em **Ver portal público**.
 
-## 5. Cópias de segurança
+## 6. Cópias de segurança
 
 ```bash
 # Banco de dados (gera um arquivo .sql.gz na pasta pessoal)
@@ -167,8 +199,13 @@ Baixe esses arquivos pelo Gerenciador de Arquivos e guarde fora do servidor. O i
 | Sintoma | Solução |
 |---|---|
 | Erro 500 | Veja o erro em `~/portal-transparencia/storage/logs/laravel.log`. As causas mais comuns são `.env` errado (dados do banco) ou falta de permissão em `storage/`. Para esta última, rode `chmod -R 755 storage bootstrap/cache`. |
+| "503 Serviço indisponível" numa página simples, sem o visual do portal | O portal ficou em modo de manutenção (uma atualização parou no meio). Rode `php artisan up` em `~/portal-transparencia` e repita a atualização para ver o erro. |
+| "Index of /" ao abrir educandariosaojose.ong.br | A raiz do domínio não tem página inicial. Crie o `.htaccess` da seção 2.6. |
+| 404 com página do servidor (não do portal) em /transparencia | O *Document Root* do domínio está errado. Em *Domains → Domains*, ele deve ser `edsj`. Confira também com `ls -la /home/santacas/edsj/` se o atalho `transparencia` existe. |
 | 403 / "Forbidden" em /transparencia | O servidor não está seguindo o link simbólico. Peça ao suporte para habilitar `SymLinksIfOwnerMatch` para a conta, ou use a alternativa abaixo. |
-| PDFs enviados dão 404 | Rode `php artisan storage:link` dentro de `~/portal-transparencia`. |
+| Painel `/admin` sem estilo (texto solto, ícones gigantes) | Faltam os arquivos do Filament: rode `php artisan filament:assets` e `php artisan optimize` e recarregue com Ctrl+F5. |
+| PDFs enviados dão 404 | Falta o atalho dos arquivos: `ln -s /home/santacas/portal-transparencia/storage/app/public /home/santacas/portal-transparencia/public/storage` |
+| `Call to undefined function ... exec()` no `storage:link` | A hospedagem bloqueia essa função do PHP. Crie o atalho com o comando `ln -s` da linha acima. |
 | Links levam para educandariosaojose.ong.br sem o /transparencia | Confira `APP_URL` no `.env` e rode `php artisan optimize`. |
 | Login do painel volta para a tela de login | Confira `SESSION_PATH=/transparencia` e `SESSION_SECURE_COOKIE=true` (o site deve estar em https) e rode `php artisan optimize`. |
 | Aviso "pdo_mysql skipped as conflicting" no Select PHP Version | É normal: `pdo_mysql` e `nd_pdo_mysql` não podem ficar ligadas juntas. Basta uma delas. Confira com `php -m \| grep -i pdo` (deve listar `pdo_mysql`). Se não listar, marque `nd_pdo_mysql` e `mysqlnd`. |

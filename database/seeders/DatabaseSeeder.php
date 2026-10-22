@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         Entidade::query()->firstOrCreate([], [
-            'nome' => 'Nome da Associação (edite no painel)',
+            'nome' => 'Educandário São José',
         ]);
 
         $perguntas = [
