@@ -1,6 +1,9 @@
 <?php
 
 return [
+    // Mostra a página "Em construção" ao público (o painel /admin continua funcionando).
+    'em_construcao' => (bool) env('PORTAL_EM_CONSTRUCAO', false),
+
     // E-mail que recebe aviso a cada novo pedido de informação. Vazio = sem aviso.
     'email_pedidos' => env('PORTAL_EMAIL_PEDIDOS'),
 

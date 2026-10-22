@@ -156,7 +156,23 @@ bash scripts/atualizar-servidor.sh
 
 O script coloca o portal em manutenção por alguns segundos, baixa o código novo, atualiza as dependências e o banco e volta ao ar.
 
-## 4. Primeiros passos no painel
+## 4. Página "Em construção"
+
+Enquanto os dados são cadastrados, o portal pode mostrar ao público só um aviso de "Em construção". O painel `/admin` continua funcionando normalmente, e quem estiver logado no painel vê o portal completo, para conferir antes de abrir.
+
+Para **ligar**, coloque esta linha no `.env` e recarregue a configuração:
+
+```bash
+cd ~/portal-transparencia
+nano .env                 # PORTAL_EM_CONSTRUCAO=true
+php artisan optimize
+```
+
+Para **desligar** (abrir o portal ao público), mude para `PORTAL_EM_CONSTRUCAO=false` e rode `php artisan optimize` de novo.
+
+A página mostra o nome, o e-mail, o telefone e o horário cadastrados em *Dados da entidade*.
+
+## 5. Primeiros passos no painel
 
 1. *Institucional → Dados da entidade*: razão social, CNPJ, endereço, horário de atendimento e logotipo.
 2. *Dirigentes e conselheiros*: diretoria e Conselho Fiscal, com os mandatos.
@@ -165,7 +181,7 @@ O script coloca o portal em manutenção por alguns segundos, baixa o código no
 5. *Receitas* e *Despesas*: lançamentos (no mínimo os pagos com recursos públicos).
 6. Confira o resultado em **Ver portal público**.
 
-## 5. Cópias de segurança
+## 6. Cópias de segurança
 
 ```bash
 # Banco de dados (gera um arquivo .sql.gz na pasta pessoal)
