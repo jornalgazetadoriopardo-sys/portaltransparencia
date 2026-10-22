@@ -138,6 +138,7 @@ A pasta `edsj` está vazia, então quem acessar `educandariosaojose.ong.br` sem 
 
 ```bash
 cat > /home/santacas/edsj/.htaccess <<'EOF'
+Options -Indexes
 RewriteEngine On
 RewriteRule ^$ /transparencia/ [R=302,L]
 EOF
@@ -198,6 +199,8 @@ Baixe esses arquivos pelo Gerenciador de Arquivos e guarde fora do servidor. O i
 | Sintoma | Solução |
 |---|---|
 | Erro 500 | Veja o erro em `~/portal-transparencia/storage/logs/laravel.log`. As causas mais comuns são `.env` errado (dados do banco) ou falta de permissão em `storage/`. Para esta última, rode `chmod -R 755 storage bootstrap/cache`. |
+| "503 Serviço indisponível" numa página simples, sem o visual do portal | O portal ficou em modo de manutenção (uma atualização parou no meio). Rode `php artisan up` em `~/portal-transparencia` e repita a atualização para ver o erro. |
+| "Index of /" ao abrir educandariosaojose.ong.br | A raiz do domínio não tem página inicial. Crie o `.htaccess` da seção 2.6. |
 | 404 com página do servidor (não do portal) em /transparencia | O *Document Root* do domínio está errado. Em *Domains → Domains*, ele deve ser `edsj`. Confira também com `ls -la /home/santacas/edsj/` se o atalho `transparencia` existe. |
 | 403 / "Forbidden" em /transparencia | O servidor não está seguindo o link simbólico. Peça ao suporte para habilitar `SymLinksIfOwnerMatch` para a conta, ou use a alternativa abaixo. |
 | Painel `/admin` sem estilo (texto solto, ícones gigantes) | Faltam os arquivos do Filament: rode `php artisan filament:assets` e `php artisan optimize` e recarregue com Ctrl+F5. |
